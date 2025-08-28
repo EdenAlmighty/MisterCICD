@@ -33,7 +33,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: 📥 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: 🏗️ Build application
         run: pnpm run build
@@ -136,12 +136,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: 📥 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: 🏗️ Build application
         run: pnpm run build
@@ -157,6 +157,8 @@ jobs:
           # Deploy to Vercel production
           vercel --prod \
             --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope ${{ secrets.VERCEL_SCOPE }} \
+            --confirm \
             --build-env NODE_ENV=production \
             --build-env VITE_APP_ENV=production
 
