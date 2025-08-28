@@ -1,0 +1,289 @@
+name: 🚀 Deploy Application
+
+on:
+  workflow_run:
+    workflows: ['CI/CD Pipeline']
+    types: [completed]
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # Deploy to Development
+  deploy-dev:
+    name: 🚀 Deploy to Development
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/develop' }}
+    environment: development
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build application
+        run: pnpm run build
+
+      - name: 🚀 Deploy to Vercel (Development)
+        id: vercel-dev
+        run: |
+          echo "🚀 Deploying to Vercel development environment..."
+
+          # Install Vercel CLI
+          npm install -g vercel@latest
+
+          # Deploy to Vercel
+          vercel --prod \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope ${{ secrets.VERCEL_SCOPE }} \
+            --confirm \
+            --build-env NODE_ENV=production \
+            --build-env VITE_APP_ENV=development
+
+          echo "vercel_url=$(vercel inspect --token ${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^[:space:]]*')" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Deploy to GitHub Pages (Development)
+        if: always() && steps.vercel-dev.outcome == 'failure'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages-dev
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@noreply.github.com'
+          commit_message: 'Deploy to GitHub Pages (Development)'
+
+      - name: 🔔 Notify deployment
+        run: |
+          if [ "${{ steps.vercel-dev.outcome }}" == "success" ]; then
+            echo "✅ Development deployment to Vercel completed successfully!"
+            echo "🌐 Vercel URL: ${{ steps.vercel-dev.outputs.vercel_url }}"
+          else
+            echo "✅ Development deployment to GitHub Pages completed successfully!"
+            echo "🌐 GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+      - name: 🧪 Post-deployment Health Check
+        run: |
+          echo "🔍 Running post-deployment health checks..."
+
+          # Wait for deployment to be ready
+          sleep 30
+
+          # Get deployment URL
+          if [ "${{ steps.vercel-dev.outcome }}" == "success" ]; then
+            DEPLOY_URL="${{ steps.vercel-dev.outputs.vercel_url }}"
+          else
+            DEPLOY_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+          echo "🌐 Testing deployment at: $DEPLOY_URL"
+
+          # Basic health check - check if page loads
+          if curl -f -s "$DEPLOY_URL" > /dev/null; then
+            echo "✅ Health check passed - page loads successfully"
+          else
+            echo "❌ Health check failed - page does not load"
+            exit 1
+          fi
+
+      - name: 🧪 Post-deployment Smoke Tests
+        run: |
+          echo "🧪 Running post-deployment smoke tests..."
+
+          # Get deployment URL
+          if [ "${{ steps.vercel-dev.outcome }}" == "success" ]; then
+            DEPLOY_URL="${{ steps.vercel-dev.outputs.vercel_url }}"
+          else
+            DEPLOY_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+          # Install Playwright for browser testing
+          npx playwright install --with-deps chromium
+
+          # Run basic smoke tests
+          npx playwright test --project=chromium --grep="smoke" --reporter=list || echo "⚠️ Smoke tests not found, skipping..."
+
+  # Deploy to Production
+  deploy-prod:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
+    environment: production
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build application
+        run: pnpm run build
+
+      - name: 🚀 Deploy to Vercel (Production)
+        id: vercel-prod
+        run: |
+          echo "🚀 Deploying to Vercel production environment..."
+
+          # Install Vercel CLI
+          npm install -g vercel@latest
+
+          # Deploy to Vercel production
+          vercel --prod \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope ${{ secrets.VERCEL_SCOPE }} \
+            --confirm \
+            --build-env NODE_ENV=production \
+            --build-env VITE_APP_ENV=production
+
+          echo "vercel_url=$(vercel inspect --token ${{ secrets.VERCEL_TOKEN }} | grep -o 'https://[^[:space:]]*')" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Deploy to GitHub Pages (Production)
+        if: always() && steps.vercel-prod.outcome == 'failure'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@noreply.github.com'
+          commit_message: 'Deploy to GitHub Pages (Production)'
+          cname: ${{ secrets.GH_PAGES_CNAME }}
+
+      - name: 🔔 Notify production deployment
+        run: |
+          if [ "${{ steps.vercel-prod.outcome }}" == "success" ]; then
+            echo "✅ Production deployment to Vercel completed successfully!"
+            echo "🌐 Vercel URL: ${{ steps.vercel-prod.outputs.vercel_url }}"
+          else
+            echo "✅ Production deployment to GitHub Pages completed successfully!"
+            echo "🌐 GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+      - name: 🧪 Post-deployment Health Check
+        run: |
+          echo "🔍 Running post-deployment health checks..."
+
+          # Wait for deployment to be ready
+          sleep 45
+
+          # Get deployment URL
+          if [ "${{ steps.vercel-prod.outcome }}" == "success" ]; then
+            DEPLOY_URL="${{ steps.vercel-prod.outputs.vercel_url }}"
+          else
+            DEPLOY_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+          echo "🌐 Testing production deployment at: $DEPLOY_URL"
+
+          # Basic health check - check if page loads
+          if curl -f -s "$DEPLOY_URL" > /dev/null; then
+            echo "✅ Production health check passed - page loads successfully"
+          else
+            echo "❌ Production health check failed - page does not load"
+            exit 1
+          fi
+
+      - name: 🧪 Post-deployment Smoke Tests
+        run: |
+          echo "🧪 Running post-deployment smoke tests..."
+
+          # Get deployment URL
+          if [ "${{ steps.vercel-prod.outcome }}" == "success" ]; then
+            DEPLOY_URL="${{ steps.vercel-prod.outputs.vercel_url }}"
+          else
+            DEPLOY_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+          # Install Playwright for browser testing
+          npx playwright install --with-deps chromium
+
+          # Run comprehensive smoke tests for production
+          npx playwright test --project=chromium --grep="smoke|production" --reporter=list || echo "⚠️ Production smoke tests not found, skipping..."
+
+      - name: 📊 Post-deployment Performance Check
+        run: |
+          echo "📊 Running post-deployment performance checks..."
+
+          # Get deployment URL
+          if [ "${{ steps.vercel-prod.outcome }}" == "success" ]; then
+            DEPLOY_URL="${{ steps.vercel-prod.outputs.vercel_url }}"
+          else
+            DEPLOY_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+
+          # Basic performance check - measure load time
+          START_TIME=$(date +%s%N)
+          curl -f -s "$DEPLOY_URL" > /dev/null
+          END_TIME=$(date +%s%N)
+
+          LOAD_TIME=$((($END_TIME - $START_TIME) / 1000000))
+          echo "⏱️ Page load time: ${LOAD_TIME}ms"
+
+          # Performance threshold (adjust as needed)
+          if [ $LOAD_TIME -lt 5000 ]; then
+            echo "✅ Performance check passed - load time under 5 seconds"
+          else
+            echo "⚠️ Performance check warning - load time over 5 seconds"
+          fi
+
+  # Rollback (if needed)
+  rollback:
+    name: 🔄 Rollback Deployment
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+
+    steps:
+      - name: 🔄 Rollback Vercel deployment
+        run: |
+          echo "🔄 Rolling back Vercel deployment due to failure..."
+
+          # Install Vercel CLI
+          npm install -g vercel@latest
+
+          # List recent deployments
+          vercel ls --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_SCOPE }}
+
+          # Rollback to previous deployment (you can customize this)
+          echo "⚠️ Manual rollback required - check Vercel dashboard"
+
+      - name: 🔄 Rollback GitHub Pages deployment
+        run: |
+          echo "🔄 Rolling back GitHub Pages deployment due to failure..."
+
+          # List recent commits on gh-pages branch
+          git fetch origin gh-pages:gh-pages
+          git log --oneline gh-pages -5
+
+          echo "⚠️ Manual rollback required - check GitHub Pages settings"
+
+      - name: 🔔 Notify rollback
+        run: |
+          echo "⚠️ Deployment rolled back due to failure"

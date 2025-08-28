@@ -1,0 +1,33 @@
+@use '@/styles/mixins' as *;
+
+.todo-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+
+  span {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow-xs);
+  }
+
+  @include mobile {
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+
+    span {
+      font-size: var(--font-size-xs);
+      padding: var(--spacing-xs);
+    }
+  }
+}

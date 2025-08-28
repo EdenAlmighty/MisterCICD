@@ -1,0 +1,68 @@
+# Cursor Terminal Configuration Rules
+
+## Terminal Setup
+
+- **Option 1 (Recommended)**: Use Git Bash as the default terminal shell in Cursor
+  - More reliable for most commands
+  - Better integration with Cursor's terminal
+  - Configure terminal.integrated.defaultProfile.windows to "Git Bash"
+
+- **Option 2**: Use PowerShell with specific command flags
+  - Works but requires specific flags for test runners
+  - May have intermittent hanging issues with some commands
+
+## Test Commands
+
+When running tests in Cursor, use these flags to prevent terminal hanging:
+
+### Vitest (Unit Tests)
+
+- **Use**: `npm run test:unit -- --run` (runs once and exits)
+- **Avoid**: `npm run test:unit` (runs in watch mode and hangs)
+
+### Playwright (E2E Tests)
+
+- **Use**: `npx playwright test --reporter=list` (runs once and exits)
+- **Use**: `npx playwright test --reporter=dot` (minimal output)
+- **Avoid**: `npm run test:e2e` (serves HTML report and hangs)
+
+- **Testing intructions**: Everytime a test fails attempt to fix the component without changing the test and re-run the specific failed test.
+
+### Other Commands
+
+- Always use flags that make commands exit after completion
+- Avoid commands that start servers or watch modes without explicit exit conditions
+- If a command hangs, try adding `--run`, `--no-watch`, or `--reporter=list` flags
+
+## Terminal Hanging Prevention
+
+- Commands should complete and return to prompt immediately
+- If a command hangs, check if it's running in watch mode or serving a report
+- Use Ctrl+C to stop hanging commands
+- Restart Cursor if terminal issues persist
+- The hanging is often caused by test runners not exiting properly
+
+## Shell-Specific Notes
+
+### Git Bash
+
+- Use Unix-style commands: `ls`, `cd`, `pwd`, `cat`, `grep`
+- Use `npm` and `git` commands normally
+- Tab completion and command history work normally
+- Most reliable option for Cursor integration
+
+### PowerShell
+
+- Use PowerShell commands: `Get-ChildItem`, `Get-Location`, etc.
+- Requires specific flags for test runners to prevent hanging
+- May have intermittent hanging issues
+- Use `--run` flag for Vitest and `--reporter=list` for Playwright
+
+## Root Cause
+
+The terminal hanging issue is primarily caused by:
+
+1. Test runners running in watch mode by default
+2. Commands that don't exit properly in Cursor's terminal integration
+3. Complex shell configurations or prompts
+4. Commands that serve HTML reports or wait for user input

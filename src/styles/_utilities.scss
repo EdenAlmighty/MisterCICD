@@ -1,0 +1,139 @@
+// Optimized utility classes - only essential utilities included
+
+// Essential display utilities
+.d-none {
+  display: none !important;
+}
+.d-block {
+  display: block !important;
+}
+.d-flex {
+  display: flex !important;
+}
+.d-grid {
+  display: grid !important;
+}
+
+// Essential flex utilities
+.flex-column {
+  flex-direction: column !important;
+}
+.flex-wrap {
+  flex-wrap: wrap !important;
+}
+.justify-center {
+  justify-content: center !important;
+}
+.justify-between {
+  justify-content: space-between !important;
+}
+.align-center {
+  align-items: center !important;
+}
+
+// Essential text utilities
+.text-center {
+  text-align: center !important;
+}
+.text-left {
+  text-align: left !important;
+}
+.text-right {
+  text-align: right !important;
+}
+
+.text-sm {
+  font-size: var(--font-size-sm) !important;
+}
+.text-base {
+  font-size: var(--font-size-base) !important;
+}
+.text-lg {
+  font-size: var(--font-size-lg) !important;
+}
+
+.font-medium {
+  font-weight: 500 !important;
+}
+.font-semibold {
+  font-weight: 600 !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+.text-secondary {
+  color: var(--secondary-color) !important;
+}
+.text-success {
+  color: var(--success-color) !important;
+}
+.text-error {
+  color: var(--error-color) !important;
+}
+
+// Essential spacing utilities (only most used)
+.m-0 {
+  margin: 0 !important;
+}
+.m-md {
+  margin: var(--spacing-md) !important;
+}
+.m-lg {
+  margin: var(--spacing-lg) !important;
+}
+
+.mt-md {
+  margin-top: var(--spacing-md) !important;
+}
+.mt-lg {
+  margin-top: var(--spacing-lg) !important;
+}
+.mb-md {
+  margin-bottom: var(--spacing-md) !important;
+}
+.mb-lg {
+  margin-bottom: var(--spacing-lg) !important;
+}
+
+.p-md {
+  padding: var(--spacing-md) !important;
+}
+.p-lg {
+  padding: var(--spacing-lg) !important;
+}
+.p-xl {
+  padding: var(--spacing-xl) !important;
+}
+
+// Essential border utilities
+.border {
+  border: 1px solid var(--border-color) !important;
+}
+.rounded {
+  border-radius: var(--radius-md) !important;
+}
+.rounded-lg {
+  border-radius: var(--radius-lg) !important;
+}
+
+// Essential shadow utilities
+.shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+.shadow-md {
+  box-shadow: var(--shadow-md) !important;
+}
+
+// Essential responsive utilities
+@media (max-width: 768px) {
+  .d-md-none {
+    display: none !important;
+  }
+  .d-md-block {
+    display: block !important;
+  }
+  .text-md-center {
+    text-align: center !important;
+  }
+}

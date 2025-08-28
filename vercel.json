@@ -1,0 +1,57 @@
+{
+  "version": 2,
+  "name": "mistercicd-todo-app",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/.nojekyll",
+      "dest": "/.nojekyll"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "regions": ["iad1"],
+  "analytics": {
+    "enabled": true
+  },
+  "speedInsights": {
+    "enabled": true
+  },
+  "webAnalytics": {
+    "enabled": true
+  },
+  "github": {
+    "silent": true
+  }
+}

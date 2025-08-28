@@ -1,0 +1,37 @@
+# GitHub Actions Configuration
+# This file configures permissions and settings for all workflows
+
+# Global permissions for all workflows
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+  actions: read
+  deployments: write
+  security-events: write
+
+# Environment protection rules
+environments:
+  development:
+    protection_rules:
+      - required_reviewers:
+          users: []
+        - required_approving_review_count: 1
+        - dismiss_stale_reviews: true
+        - require_code_owner_reviews: false
+        
+  production:
+    protection_rules:
+      - required_reviewers:
+          users: []
+        - required_approving_review_count: 2
+        - dismiss_stale_reviews: true
+        - require_code_owner_reviews: true
+        - required_status_checks:
+            strict: true
+            contexts:
+              - "🧪 Run Tests"
+              - "🏗️ Build Application"
+              - "🔒 Security & Quality"
+              - "📦 Bundle Size"
