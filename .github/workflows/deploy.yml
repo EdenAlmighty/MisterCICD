@@ -7,7 +7,7 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   PNPM_VERSION: '8'
 
 jobs:
@@ -157,8 +157,6 @@ jobs:
           # Deploy to Vercel production
           vercel --prod \
             --token ${{ secrets.VERCEL_TOKEN }} \
-            --scope ${{ secrets.VERCEL_SCOPE }} \
-            --confirm \
             --build-env NODE_ENV=production \
             --build-env VITE_APP_ENV=production
 

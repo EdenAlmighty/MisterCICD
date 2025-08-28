@@ -65,7 +65,7 @@ module.exports = {
           framework: 'vite',
           functions: {
             'api/*.js': {
-              runtime: 'nodejs18.x',
+              runtime: 'nodejs20.x',
             },
           },
         },
@@ -117,7 +117,7 @@ module.exports = {
     buildCommand: 'npm run build',
     outputDirectory: 'dist',
     installCommand: 'npm install --frozen-lockfile',
-    nodeVersion: '18',
+    nodeVersion: '20',
     cacheDirectories: ['node_modules', '.pnpm-store'],
     environmentVariables: {
       NODE_ENV: 'production',
