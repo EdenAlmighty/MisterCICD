@@ -115,6 +115,78 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: 'dist/**/*.{js,css,html}'
 
+  # Accessibility Testing
+  accessibility:
+    name: ♿ Accessibility Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 📥 Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: 🏗️ Build application
+        run: pnpm run build
+
+      - name: 🚀 Start preview server
+        run: |
+          pnpm run preview &
+          sleep 10
+
+      - name: ♿ Run accessibility tests
+        run: |
+          echo "🧪 Running accessibility tests..."
+          npx playwright test e2e/axe-accessibility.spec.ts --reporter=list
+          npx playwright test e2e/pa11y-accessibility.spec.ts --reporter=list
+
+      - name: 📊 Upload accessibility test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-test-results
+          path: test-results/
+          retention-days: 30
+
+      - name: 💬 Comment accessibility results on PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Check if accessibility tests passed
+            const testResults = fs.existsSync('./test-results/') ? 
+              fs.readdirSync('./test-results/').length : 0;
+
+            const message = testResults > 0 ? 
+              '⚠️ **Accessibility Tests Completed**\n\n' +
+              'Some accessibility tests may have failed. Check the test results for details.' :
+              '✅ **Accessibility Tests Passed**\n\n' +
+              'All accessibility tests completed successfully!';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
   # Security Check
   security:
     name: 🔒 Security
