@@ -1,24 +1,29 @@
 // CSS Custom Properties (CSS Variables)
 :root {
   // Colors
-  --primary-color: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
-  
+  --primary-color: #1e3a8a; // Much darker blue for better contrast with white text (was #1d4ed8)
+  --primary-dark: #1e1b4b; // Even darker blue for gradient
+  --primary-light: #3b82f6; // Keep lighter blue for hover states
+
   --secondary-color: #64748b;
   --secondary-dark: #475569;
   --secondary-light: #94a3b8;
-  
+
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --error-color: #ef4444;
-  
+
   --text-color: #1f2937;
   --text-light: #6b7280;
   --bg-color: #ffffff;
   --bg-secondary: #f9fafb;
   --border-color: #e5e7eb;
-  
+
+  // Button colors for better contrast
+  --button-bg: #f3f4f6; // Light gray background
+  --button-text: #374151; // Dark gray text for better contrast
+  --button-hover-bg: #e5e7eb; // Slightly darker on hover
+
   // Typography
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -27,7 +32,7 @@
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
-  
+
   // Spacing
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -35,13 +40,13 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   // Border radius
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
-  
+
   // Shadows
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);

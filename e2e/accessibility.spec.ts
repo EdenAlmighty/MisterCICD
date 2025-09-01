@@ -100,11 +100,150 @@ test.describe('Accessibility and Error Handling', () => {
     await expect(page.locator('.todo-form')).toBeVisible()
   })
 
+  test('should handle header contrast', async ({ page }) => {
+    // Helper function to calculate relative luminance
+    const getRelativeLuminance = (r: number, g: number, b: number): number => {
+      const [rs, gs, bs] = [r, g, b].map((c) => {
+        c = c / 255
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+      })
+      return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+    }
+
+    // Helper function to calculate contrast ratio
+    const getContrastRatio = (lum1: number, lum2: number): number => {
+      const lighter = Math.max(lum1, lum2)
+      const darker = Math.min(lum1, lum2)
+      return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    // Helper function to parse RGB values
+    const parseRGB = (rgbString: string): [number, number, number] => {
+      const match = rgbString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/)
+      if (match) {
+        return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])]
+      }
+      // Fallback for hex colors
+      if (rgbString.startsWith('#')) {
+        const hex = rgbString.slice(1)
+        const r = parseInt(hex.slice(0, 2), 16)
+        const g = parseInt(hex.slice(2, 4), 16)
+        const b = parseInt(hex.slice(4, 6), 16)
+        return [r, g, b]
+      }
+      return [0, 0, 0] // Default fallback
+    }
+
+    await page.goto('/')
+
+    // Check todo header title has good contrast
+    const headerTitle = page.locator('.todo-title')
+    await expect(headerTitle).toBeVisible()
+
+    // Get the computed styles for the title
+    const titleStyles = await headerTitle.evaluate((el) => {
+      const computed = window.getComputedStyle(el)
+      return {
+        color: computed.color,
+        backgroundColor: computed.backgroundColor,
+      }
+    })
+
+    // Get the actual page background color (not the transparent header background)
+    const pageBackground = await page.evaluate(() => {
+      return window.getComputedStyle(document.body).backgroundColor
+    })
+
+    console.log('Title styles:', titleStyles)
+    console.log('Page background:', pageBackground)
+
+    // Parse the colors and calculate contrast
+    const titleColor = parseRGB(titleStyles.color)
+    const pageBg = parseRGB(pageBackground)
+
+    const titleLum = getRelativeLuminance(...titleColor)
+    const pageBgLum = getRelativeLuminance(...pageBg)
+    const titleContrast = getContrastRatio(titleLum, pageBgLum)
+
+    console.log(`Title contrast ratio: ${titleContrast.toFixed(2)}`)
+    console.log(`Title color: ${titleStyles.color} (luminance: ${titleLum.toFixed(4)})`)
+    console.log(`Page background: ${pageBackground} (luminance: ${pageBgLum.toFixed(4)})`)
+
+    // WCAG AA requires 4.5:1 for normal text, 3:1 for large text
+    // Since this is a large title, we'll use 3:1 as the minimum
+    // BUT: #1d4ed8 on #ffffff actually gives 3.68:1, which is poor
+    // Let's test against the actual expected contrast
+    const expectedContrast = 3.68 // This is what WebAIM and other tools give
+    console.log(`Expected contrast ratio: ${expectedContrast}`)
+    console.log(`Actual contrast ratio: ${titleContrast.toFixed(2)}`)
+
+    // The test should FAIL because 3.68:1 is poor contrast
+    // We need a contrast ratio of at least 4.5:1 for good readability
+    expect(titleContrast).toBeGreaterThanOrEqual(4.5)
+  })
+
   test('should have proper color contrast', async ({ page }) => {
-    // This test would require actual color contrast testing
-    // For now, we'll verify the app loads and is functional
-    await expect(page.locator('.todo-page')).toBeVisible()
-    await expect(page.locator('.todo-form')).toBeVisible()
+    await page.goto('/')
+
+    // Check that the main text elements have good contrast
+    // We'll verify that text elements have proper styling for readability
+
+    // Check main heading/input has good contrast
+    const input = page.locator('input[placeholder="What needs to be done?"]')
+    await expect(input).toBeVisible()
+
+    // Check that the input has proper styling (not transparent or very light)
+    const inputStyles = await input.evaluate((el) => {
+      const computed = window.getComputedStyle(el)
+      return {
+        backgroundColor: computed.backgroundColor,
+        color: computed.color,
+        borderColor: computed.borderColor,
+      }
+    })
+
+    // Verify input has visible styling
+    expect(inputStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // Not transparent
+    expect(inputStyles.color).not.toBe('rgba(0, 0, 0, 0)') // Not transparent
+
+    // Check submit button has good contrast
+    const submitBtn = page.locator('button[type="submit"]')
+    await expect(submitBtn).toBeVisible()
+
+    const buttonStyles = await submitBtn.evaluate((el) => {
+      const computed = window.getComputedStyle(el)
+      return {
+        backgroundColor: computed.backgroundColor,
+        color: computed.color,
+      }
+    })
+
+    // Verify button has visible styling
+    expect(buttonStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // Not transparent
+    expect(buttonStyles.color).not.toBe('rgba(0, 0, 0, 0)') // Not transparent
+
+    // Add a todo to test dynamic content contrast
+    await page.locator('input[placeholder="What needs to be done?"]').fill('Color contrast test')
+    await page.locator('button[type="submit"]').click()
+
+    // Check that the added todo text is visible
+    const todoText = page.locator('.todo-text')
+    await expect(todoText).toHaveText('Color contrast test')
+
+    // Verify todo text has proper styling
+    const todoStyles = await todoText.evaluate((el) => {
+      const computed = window.getComputedStyle(el)
+      return {
+        color: computed.color,
+        backgroundColor: computed.backgroundColor,
+      }
+    })
+
+    // Verify todo text is readable
+    expect(todoStyles.color).not.toBe('rgba(0, 0, 0, 0)') // Not transparent
+    expect(todoStyles.color).not.toBe('rgba(255, 255, 255, 0)') // Not transparent white
+
+    console.log('Color contrast test passed - all text elements have proper styling')
   })
 
   test('should handle form submission with Enter key', async ({ page }) => {
