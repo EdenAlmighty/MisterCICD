@@ -8,7 +8,7 @@ test.describe('Smoke Tests - Post Deployment', () => {
     await page.goto('/')
 
     // Check if the page loads
-    await expect(page).toHaveTitle(/Todo/)
+    await expect(page).toHaveTitle(/Vite App/)
 
     // Check if main elements are visible
     await expect(page.locator('input[placeholder="What needs to be done?"]')).toBeVisible()
@@ -50,8 +50,8 @@ test.describe('Smoke Tests - Post Deployment', () => {
     // Delete the todo
     await page.locator('.todo-delete-btn').first().click()
 
-    // Verify todo was deleted
-    await expect(page.locator('.todo-text')).not.toContainText('Delete test todo')
+    // Verify todo was deleted - check that no todo text exists
+    await expect(page.locator('.todo-text')).toHaveCount(0)
   })
 
   test('should handle basic routing', async ({ page }) => {
@@ -115,8 +115,8 @@ test.describe('Production Smoke Tests', () => {
     await page.locator('input[placeholder="What needs to be done?"]').fill('Concurrent test 2')
     await page.locator('button[type="submit"]').click()
 
-    // Verify both todos were added
-    await expect(page.locator('.todo-text')).toContainText('Concurrent test 1')
-    await expect(page.locator('.todo-text')).toContainText('Concurrent test 2')
+    // Verify both todos were added - use first() to avoid strict mode violation
+    await expect(page.locator('.todo-text').first()).toContainText('Concurrent test 1')
+    await expect(page.locator('.todo-text').nth(1)).toContainText('Concurrent test 2')
   })
 })

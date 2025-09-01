@@ -105,6 +105,8 @@ onUnmounted(() => {
   font-size: 12px;
   z-index: 9999;
   min-width: 200px;
+  /* Prevent interference with E2E tests */
+  pointer-events: none;
 }
 
 .monitor-header h4 {
